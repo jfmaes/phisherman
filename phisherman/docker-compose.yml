@@ -1,0 +1,65 @@
+
+# containerized setup - right now configured to run all containers on same host and exposed through the container IP.
+# if you want to expose to localhost, uncomment the ports. this will allow you to serve the frontend on localhost:443 and the backend on localhost:3000
+# useful if you want to run evilginx uncontainerized on a VM, but still want access to the application. 
+# could be modified for macvlan as well with some slight tweaks to the app sourcode and dockerfiles. 
+
+services:
+  backend:
+    build: ./backend
+    volumes:
+      - ./backend:/app
+      - ./certs:/app/certs
+      - ./hosts:/etc/hosts
+    #ports:
+     # - "3000:3000"
+    environment:
+      - NODE_ENV=development
+
+    networks:
+      custom_net:
+        ipv4_address: 172.13.37.10
+
+
+  frontend:
+    build: ./frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - ./certs:/app/certs
+      - ./hosts:/etc/hosts
+    #ports:
+     # - "443:443" # Vite HTTPS port
+    depends_on:
+      - backend
+    networks:
+      custom_net:
+        ipv4_address: 172.13.37.11    
+
+  evilginx:
+    build: ./evilginx
+    volumes:
+      - ./evilginx/phishlets:/evilginx/phishlets
+      - ./evilginx/redirectors:/evilginx/redirectors
+      - ./hosts:/etc/hosts
+    entrypoint: /bin/bash
+    tty: true
+    networks:
+      custom_net:
+        ipv4_address: 172.13.37.12 
+
+  mailhog:
+      image: mailhog/mailhog
+     # ports:
+     #   - "1025:1025"      # SMTP port
+      #  - "8025:8025"      # Web interface for MailHog
+      networks:
+        custom_net:
+          ipv4_address: 172.13.37.13
+
+networks:
+  custom_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.13.37.0/24

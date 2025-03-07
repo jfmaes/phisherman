@@ -1,0 +1,18 @@
+# Use a lightweight Node.js image
+FROM node:23.8-bullseye
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files and install dependencies
+COPY package.json package-lock.json ./
+RUN npm install --force
+
+# Copy app files
+COPY . .
+
+# Expose frontend port
+EXPOSE 5173
+
+# Start the React app using Vite - keep in mind that this binds the IP as well so change this if you make network stack changes.
+CMD ["npm", "run", "dev", "--", "--host", "172.13.37.11"]

