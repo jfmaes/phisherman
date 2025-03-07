@@ -1,0 +1,70 @@
+# =============================
+# 🔹 General Node.js Ignored Files
+# =============================
+node_modules/
+package-lock.json
+yarn.lock
+/backend/node_modules/
+/frontend/node_modules/
+
+# =============================
+# 🔹 Logs & Debugging Files
+# =============================
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.vscode/
+
+# =============================
+# 🔹 Environment Variables (Secrets)
+# =============================
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# =============================
+# 🔹 Database Files (SQLite)
+# =============================
+backend/database.sqlite
+backend/database.sqlite-journal
+
+# =============================
+# 🔹 Compiled & Build Artifacts
+# =============================
+frontend/dist/
+frontend/.vite/
+frontend/.vite-temp/
+frontend/out/
+
+# =============================
+# 🔹 Docker Ignore Files
+# =============================
+docker-compose.override.yml
+docker-compose.dev.yml
+.dockerignore
+backend/.cache/
+
+# =============================
+# 🔹 OS-Specific Ignored Files
+# =============================
+.DS_Store
+Thumbs.db
+
+# =============================
+# 🔹 Miscellaneous
+# =============================
+backend/uploads/
+backend/tmp/
+frontend/.cache/
+frontend/.parcel-cache/
+frontend/.eslintcache
+
+# =============================
+# 🔹 Ignore MailHog Data (SMTP Testing)
+# =============================
+mailhog-data/

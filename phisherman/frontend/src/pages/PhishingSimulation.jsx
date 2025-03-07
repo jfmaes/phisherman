@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { sendPhishingEmail } from "../services/api";
 import { useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
+import { v4 as uuidv4 } from "uuid"; // ✅ Import UUID generator
+
+
 
 /**
  * Phishing Simulation Page
@@ -13,6 +16,13 @@ function PhishingSimulation() {
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [message, setMessage] = useState("");
+
+  // ✅ Ensure each user has a unique UUID stored in localStorage
+  useEffect(() => {
+    if (!localStorage.getItem("userId")) {
+      localStorage.setItem("userId", uuidv4()); // ✅ Generate & store user UUID
+    }
+  }, []);
 
   /**
    * Handles sending the phishing email.
@@ -32,6 +42,14 @@ function PhishingSimulation() {
     } catch (err) {
       console.error("Error sending phishing email:", err);
       setMessage("❌ Failed to send phishing email.");
+      if (import.meta.env.VITE_ENV === 'hosted')
+      {
+        setMessage("❌ Sending email is disabled in the hosted version of this app.");
+        setTimeout(() => {
+          navigate("/phishing-execution", { state: { emailBody: body } });
+        }, 1500);
+      }
+      
     }
   };
 
@@ -41,57 +59,27 @@ function PhishingSimulation() {
         <h1 className="text-3xl font-bold text-gray-800">Phishing Simulation</h1>
         <p className="text-gray-600 mt-2">Send a phishing email via MailHog.</p>
 
-        {/* ✅ Hardcoded "To" field */}
         <div className="mt-4">
           <label className="block text-gray-700">To:</label>
-          <input
-            type="email"
-            value="victim@sec565.rocks"
-            readOnly
-            className="p-2 border rounded w-full bg-gray-200 cursor-not-allowed"
-          />
+          <input type="email" value="victim@sec565.rocks" readOnly className="p-2 border rounded w-full bg-gray-200 cursor-not-allowed" />
         </div>
 
-        {/* ✅ User-specified "From" field */}
         <div className="mt-4">
           <label className="block text-gray-700">From:</label>
-          <input
-            type="email"
-            placeholder="securityteam@sec565.rocks"
-            className="p-2 border rounded w-full"
-            value={from}
-            onChange={(e) => setFrom(e.target.value)}
-          />
+          <input type="email" className="p-2 border rounded w-full" value={from} onChange={(e) => setFrom(e.target.value)} />
         </div>
 
-        {/* ✅ User-specified "Subject" field */}
         <div className="mt-4">
           <label className="block text-gray-700">Subject:</label>
-          <input
-            type="text"
-            placeholder="Important: Security Alert"
-            className="p-2 border rounded w-full"
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-          />
+          <input type="text" className="p-2 border rounded w-full" value={subject} onChange={(e) => setSubject(e.target.value)} />
         </div>
 
-        {/* ✅ User-specified "Body" field */}
         <div className="mt-4">
           <label className="block text-gray-700">Email Body:</label>
-          <textarea
-            placeholder="Write your phishing email here..."
-            className="p-2 border rounded w-full h-32"
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-          />
+          <textarea className="p-2 border rounded w-full h-32" value={body} onChange={(e) => setBody(e.target.value)} />
         </div>
 
-        {/* ✅ Send Phishing Email Button */}
-        <button
-          onClick={handleSendPhish}
-          className="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition mt-4 w-full"
-        >
+        <button onClick={handleSendPhish} className="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition mt-4 w-full">
           Send Phishing Email
         </button>
 

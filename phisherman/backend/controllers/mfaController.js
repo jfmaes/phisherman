@@ -2,7 +2,7 @@ const speakeasy = require('speakeasy');
 const jwt = require("jsonwebtoken");
 const User = require('../models/userModel');
 
-const SECRET_KEY = "your_secret_key"; // Replace with env variable in production
+const SECRET_KEY = "phisherman_private_secret_key_123"; // Replace with env variable in production
 
 
 exports.setupMFA = async (req, res) => {

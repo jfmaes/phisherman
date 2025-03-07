@@ -13,7 +13,7 @@ const emailRoutes = require("./routes/emailRoutes");
 
 const app = express();
 const port = process.env.PORT || 3000;
-const host = "172.13.37.10"; // ✅ Bind to all network interfaces
+const host = "0.0.0.0"; // ✅ Bind to all network interfaces
 
 const options = {
   key: fs.readFileSync("/app/certs/key.pem"),

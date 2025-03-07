@@ -57,6 +57,9 @@ function UserManagement() {
     } catch (err) {
       console.error("Error fetching users:", err);
       setMessage("Error fetching users.");
+      if(import.meta.env.VITE_ENV === "hosted") {
+        setMessage("Fetching Users is disabled in the hosted environment.");
+      }
     }
   };
 
@@ -96,6 +99,9 @@ function UserManagement() {
     } catch (err) {
       console.error("Error updating user:", err);
       setMessage("Failed to update user.");
+      if(import.meta.env.VITE_ENV === "hosted") {
+        setMessage("Editing Users is disabled in the hosted environment.");
+      }
     }
   };
 
@@ -127,6 +133,9 @@ function UserManagement() {
     } catch (err) {
       console.error("Error deleting user:", err);
       setMessage("Failed to delete user.");
+      if(import.meta.env.VITE_ENV === "hosted") {
+        setMessage("Deleting Users is disabled in the hosted environment.");
+      }
     }
   };
 

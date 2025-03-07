@@ -1,18 +1,18 @@
-# Use a lightweight Node.js image
-FROM node:23.8-bullseye
+FROM httpd:latest
 
-# Set working directory
-WORKDIR /app
+# Copy your custom SSL/proxy config (apache.conf) into conf/extra/httpd-ssl.conf
+COPY apache.conf /usr/local/apache2/conf/extra/httpd-ssl.conf
 
-# Copy package files and install dependencies
-COPY package.json package-lock.json ./
-RUN npm install --force
+# Enable all needed modules in httpd.conf
+RUN sed -i 's/^#LoadModule ssl_module/LoadModule ssl_module/' /usr/local/apache2/conf/httpd.conf && \
+    sed -i 's/^#LoadModule socache_shmcb_module/LoadModule socache_shmcb_module/' /usr/local/apache2/conf/httpd.conf && \
+    sed -i 's/^#LoadModule proxy_module/LoadModule proxy_module/' /usr/local/apache2/conf/httpd.conf && \
+    sed -i 's/^#LoadModule proxy_http_module/LoadModule proxy_http_module/' /usr/local/apache2/conf/httpd.conf && \
+    sed -i 's/^#LoadModule proxy_ssl_module/LoadModule proxy_ssl_module/' /usr/local/apache2/conf/httpd.conf && \
+    sed -i 's/^#Include conf\/extra\/httpd-ssl.conf/Include conf\/extra\/httpd-ssl.conf/' /usr/local/apache2/conf/httpd.conf && \
+    sed -i 's/^#LoadModule rewrite_module/LoadModule rewrite_module/' \
+    /usr/local/apache2/conf/httpd.conf
 
-# Copy app files
-COPY . .
 
-# Expose frontend port
-EXPOSE 5173
-
-# Start the React app using Vite - keep in mind that this binds the IP as well so change this if you make network stack changes.
-CMD ["npm", "run", "dev", "--", "--host", "172.13.37.11"]
+# Expose both HTTP and HTTPS
+EXPOSE 443

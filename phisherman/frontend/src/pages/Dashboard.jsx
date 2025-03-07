@@ -81,6 +81,9 @@ function Dashboard() {
     } catch (err) {
       console.error("Error creating data:", err);
       setMessage("Failed to add data.");
+      if(import.meta.env.VITE_ENV === "hosted") {
+        setMessage("Adding data is disabled in the hosted environment.");
+      }
     }
   };
 
@@ -97,6 +100,9 @@ function Dashboard() {
     } catch (err) {
       console.error("Error updating data:", err);
       setMessage("Failed to update data.");
+      if(import.meta.env.VITE_ENV === "hosted") {
+        setMessage("Updating data is disabled in the hosted environment.");
+      }
     }
   };
 
@@ -130,6 +136,9 @@ function Dashboard() {
     } catch (err) {
       console.error("Error deleting data:", err);
       setMessage("Failed to delete data.");
+      if(import.meta.env.VITE_ENV === "hosted") {
+        setMessage("Deleting data is disabled in the hosted environment.");
+      }
     }
   };
 

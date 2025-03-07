@@ -5,27 +5,43 @@ import Footer from "../components/Footer";
 
 /**
  * Phishing Execution Page
- * Streams real-time SSE logs while maintaining correct order.
+ *  - Subscribes to SSE logs for the given userId.
+ *  - Executes the phishing simulation call when SSE is ready.
  */
 function PhishingExecution() {
   const location = useLocation();
-  const emailBody = location.state?.emailBody;
-  const logQueue = useRef([]); // ✅ Queue to keep logs in order
-  const isProcessingQueue = useRef(false); // ✅ Ensures real-time log streaming
-  const [typedLog, setTypedLog] = useState("");
+
+  // ---------------------------------------------------------------------------
+  // 1. Retrieve necessary data (emailBody + userId).
+  //    By default, we fetch userId from localStorage in `connectToPhishingLogs()`,
+  //    but it’s cleaner if you pass it explicitly:
+  // ---------------------------------------------------------------------------
+  const emailBody = location.state?.emailBody || "";
+  const userIdRef = useRef(localStorage.getItem("userId")); 
+    // You could also parse it from location.state if you stored it there.
+
+  // ---------------------------------------------------------------------------
+  // 2. Internal state and refs for typed logs + SSE controlling
+  // ---------------------------------------------------------------------------
+  const [typedLog, setTypedLog] = useState(
+    emailBody ? "" : "🐰 You haven't followed the white rabbit yet, Neo...\n"
+  );
   const [cursorVisible, setCursorVisible] = useState(true);
+  const [isSSEReady, setIsSSEReady] = useState(false);
+
+  // We queue up logs so they appear in order, slowly:
+  const logQueue = useRef([]);
+  const isProcessingQueue = useRef(false);
+
+  // Ensure we only trigger the phishing attack once:
   const hasRun = useRef(false);
-  const sseConnected = useRef(false);
 
-  // Blinking cursor effect
-  useEffect(() => {
-    const cursorInterval = setInterval(() => {
-      setCursorVisible((prev) => !prev);
-    }, 500);
-    return () => clearInterval(cursorInterval);
-  }, []);
+  // Keep the SSE connection reference:
+  const eventSourceRef = useRef(null);
 
-  // ✅ Ensure Easter egg is displayed if no emailBody
+  // ---------------------------------------------------------------------------
+  // 3. Show Easter egg if no emailBody
+  // ---------------------------------------------------------------------------
   useEffect(() => {
     if (!emailBody) {
       logQueue.current.push("🐰 You haven't followed the white rabbit yet, Neo...\n");
@@ -33,68 +49,129 @@ function PhishingExecution() {
     }
   }, [emailBody]);
 
-  // ✅ Connect to SSE logs BEFORE starting the attack
+  // ---------------------------------------------------------------------------
+  // 4. Blinking cursor effect
+  // ---------------------------------------------------------------------------
   useEffect(() => {
-    if (!emailBody || sseConnected.current) return;
-    sseConnected.current = true;
+    const intervalId = setInterval(() => {
+      setCursorVisible((prev) => !prev);
+    }, 500);
+    return () => clearInterval(intervalId);
+  }, []);
 
-    const eventSource = connectToPhishingLogs();
+  // ---------------------------------------------------------------------------
+  // 5. Establish SSE connection once (when we have emailBody + userId).
+  //    If either is missing, we skip connecting altogether.
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    const userId = userIdRef.current;
+    if (!userId || !emailBody || eventSourceRef.current) {
+      return; // Skip if no userId, no emailBody, or SSE is already created
+    }
 
-    eventSource.onmessage = (event) => {
-      let message = event.data.trim();
+    console.log(`🔌 Connecting to SSE logs for userId ${userId}...`);
+    eventSourceRef.current = connectToPhishingLogs(userId);
+
+    eventSourceRef.current.onopen = () => {
+      console.log("✅ SSE Connection Established.");
+      setIsSSEReady(true);
+    };
+
+    eventSourceRef.current.onerror = (err) => {
+      console.error("❌ SSE Connection Error:", err);
+      // We’ll close the connection & mark SSE as not ready
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+      }
+      setIsSSEReady(false);
+    };
+
+    // Cleanup when unmounting (or if effect runs again, which is unlikely here):
+    return () => {
+      console.log("SSE effect cleanup: closing connection...");
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+        console.log("🔌 SSE Connection Closed.");
+      }
+    };
+  }, [emailBody]); // No [userId], because userId is in a ref
+
+  // ---------------------------------------------------------------------------
+  // 6. On SSE messages, push logs into the queue
+  //    (You can adapt `connectToPhishingLogs(userId)` to do this, or keep it here.)
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    // Guard: if there's no event source yet, do nothing
+    if (!eventSourceRef.current) return;
+
+    const source = eventSourceRef.current;
+
+    source.onmessage = (event) => {
+      const message = event.data.trim();
       if (message && message !== "undefined") {
         console.log("📥 Received SSE log:", message);
-        logQueue.current.push(message + "\n"); // ✅ Add logs to queue with newline
-        processNextLog(); // ✅ Immediately process the next log
+        logQueue.current.push(message + "\n");
+        processNextLog();
       }
     };
 
-    eventSource.onerror = () => {
-      console.error("❌ Lost connection to log stream.");
-      logQueue.current.push("❌ CONNECTION LOST.\n"); // ✅ Ensure disconnection logs appear
-      processNextLog();
-      eventSource.close();
-      sseConnected.current = false;
-    };
+    // No need for a local cleanup, because we do a single close above
+  }, [isSSEReady]); 
+  // We only set up these handlers once SSE is at least created
 
-    return () => {
-      eventSource.close();
-      sseConnected.current = false;
-    };
-  }, [emailBody]); // ✅ Establishes SSE connection first
-
-  // ✅ Start phishing attack only AFTER SSE is connected
+  // ---------------------------------------------------------------------------
+  // 7. Start phishing attack once SSE is ready (only run 1x)
+  // ---------------------------------------------------------------------------
   useEffect(() => {
-    if (!emailBody || hasRun.current || !sseConnected.current) return;
+    console.log(
+      "Phishing Attack Effect Check:",
+      "emailBody =", emailBody,
+      "isSSEReady =", isSSEReady,
+      "hasRun.current =", hasRun.current
+    );
+    if (!emailBody || !isSSEReady || hasRun.current) return;
     hasRun.current = true;
 
-    setTimeout(async () => {
-      try {
-        await triggerPhishingSimulation(emailBody);
-        logQueue.current.push("✅ ATTACK SUCCESSFUL. Check EvilGinx!\n");
+    console.log("🚀 Starting phishing attack...");
+    triggerPhishingSimulation(emailBody)
+      .then((response) => {
+        if (response.data.success) {
+          logQueue.current.push("✅ ATTACK SUCCESSFUL. Check EvilGinx!\n");
+        } else {
+          const err = response.data.error || "Phishing attack blocked.";
+          logQueue.current.push(`❌ ERROR: ${err}\n`);
+        }
         processNextLog();
-      } catch (err) {
+      })
+      .catch((err) => {
+        console.error("❌ Phishing attack failed:", err);
         logQueue.current.push("❌ ERROR: PHISHING ATTACK FAILED.\n");
         processNextLog();
-        console.error("Error executing phishing attack:", err);
-      }
-    }, 500); // ✅ Slight delay to ensure logs are received first
-  }, [emailBody, sseConnected.current]); // ✅ Ensures SSE is connected first
+      });
+  }, [emailBody, isSSEReady]);
 
-  // ✅ Stream logs in real-time while maintaining correct order
-  const processNextLog = () => {
+  // ---------------------------------------------------------------------------
+  // 8. Process logs in a "typewriter" style (or just append all if you prefer)
+  // ---------------------------------------------------------------------------
+  function processNextLog() {
     if (isProcessingQueue.current || logQueue.current.length === 0) return;
     isProcessingQueue.current = true;
 
-    let logEntry = logQueue.current.shift(); // ✅ Take the first log in the queue
-    setTypedLog((prev) => prev + logEntry); // ✅ Append log entry with newline
+    // Dequeue the next log entry
+    const nextEntry = logQueue.current.shift();
+    setTypedLog((prev) => prev + nextEntry);
 
+    // Delay the next chunk to mimic "typing"
     setTimeout(() => {
       isProcessingQueue.current = false;
-      processNextLog(); // ✅ Process next log immediately after delay
-    }, 300); // ✅ Controls real-time display speed
-  };
+      processNextLog();
+    }, 300);
+  }
 
+  // ---------------------------------------------------------------------------
+  // 9. Render
+  // ---------------------------------------------------------------------------
   return (
     <div className="min-h-screen bg-black text-green-500 font-mono p-6 flex flex-col justify-between">
       <div>
@@ -106,7 +183,7 @@ function PhishingExecution() {
 
         <div className="bg-black border border-green-500 p-4 rounded-lg shadow-lg max-h-96 overflow-auto">
           <pre className="whitespace-pre-wrap">
-            {typedLog.slice(0, -1)} {cursorVisible ? "█" : ""} {/* ✅ Cursor stays at the end */}
+            {typedLog.slice(0, -1)} {cursorVisible ? "█" : ""}
           </pre>
         </div>
       </div>

@@ -10,56 +10,20 @@ services:
     volumes:
       - ./backend:/app
       - ./certs:/app/certs
-      - ./hosts:/etc/hosts
     #ports:
      # - "3000:3000"
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=hosted
 
-    networks:
-      custom_net:
-        ipv4_address: 172.13.37.10
-
+  
 
   frontend:
     build: ./frontend
     volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - ./certs:/app/certs
-      - ./hosts:/etc/hosts
-    #ports:
-     # - "443:443" # Vite HTTPS port
+      - ./certs:/certs
+      - ./frontend/dist:/usr/local/apache2/htdocs
+    ports:
+      - "443:443" # Vite HTTPS port
     depends_on:
       - backend
-    networks:
-      custom_net:
-        ipv4_address: 172.13.37.11    
-
-  evilginx:
-    build: ./evilginx
-    volumes:
-      - ./evilginx/phishlets:/evilginx/phishlets
-      - ./evilginx/redirectors:/evilginx/redirectors
-      - ./hosts:/etc/hosts
-    entrypoint: /bin/bash
-    tty: true
-    networks:
-      custom_net:
-        ipv4_address: 172.13.37.12 
-
-  mailhog:
-      image: mailhog/mailhog
-     # ports:
-     #   - "1025:1025"      # SMTP port
-      #  - "8025:8025"      # Web interface for MailHog
-      networks:
-        custom_net:
-          ipv4_address: 172.13.37.13
-
-networks:
-  custom_net:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.13.37.0/24
+  

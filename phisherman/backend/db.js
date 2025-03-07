@@ -72,7 +72,7 @@ const ensureSensitiveDataExists = () => {
  * Checks if the victim user exists. If not, creates a new victim user with MFA enabled.
  */
 const ensureVictimUserExists = () => {
-  db.get(`SELECT COUNT(*) AS count FROM users WHERE email = 'victim@example.com'`, (err, row) => {
+  db.get(`SELECT COUNT(*) AS count FROM users WHERE email = 'victim@sec565.rocks'`, (err, row) => {
     if (err) {
       console.error("Error checking users table:", err.message);
     } else if (row.count === 0) {

@@ -1,5 +1,6 @@
 const express = require('express');
 const { authenticateToken } = require('../middleware/authMiddleware');
+const {hostGuard} = require('../middleware/hostGuardMiddleware');
 const {
   getAllSensitiveData,
   createSensitiveData,
@@ -13,12 +14,12 @@ const router = express.Router();
 router.get('/sensitive-data', authenticateToken, getAllSensitiveData);
 
 // Create new sensitive data
-router.post('/sensitive-data', authenticateToken, createSensitiveData);
+router.post('/sensitive-data', hostGuard,authenticateToken, createSensitiveData);
 
 // Update existing sensitive data
-router.put('/sensitive-data/:id', authenticateToken, updateSensitiveData);
+router.put('/sensitive-data/:id', hostGuard,authenticateToken, updateSensitiveData);
 
 // Delete sensitive data
-router.delete('/sensitive-data/:id', authenticateToken, deleteSensitiveData);
+router.delete('/sensitive-data/:id', hostGuard,authenticateToken, deleteSensitiveData);
 
 module.exports = router;

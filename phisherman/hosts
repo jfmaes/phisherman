@@ -1,4 +1,0 @@
-#this is the hosts file for the docker containers and the host that will host the containers as well in case you want local testing.
-172.13.37.11    sec565.rocks
-172.13.37.12    sec565.phish
-172.13.37.13    mailhog.local

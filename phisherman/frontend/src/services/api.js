@@ -1,9 +1,16 @@
 import axios from "axios";
 
+
 // Change the hosts file if running outside Docker.
 const API_URL = "/api";
 
 //console.log("VITE_API_URL:", import.meta.env.VITE_API_URL); // ✅ Debug log
+
+// Ensure a UUID exists in localStorage
+const getUserId = () => {
+  let userId = localStorage.getItem("userId");
+  return userId;
+};
 
 // ✅ Setup Axios instance
 const api = axios.create({
@@ -97,11 +104,14 @@ export const sendPhishingEmail = async (from,subject,body)=> {
 
 // ✅ Phishing Simulation (Public)
 export const triggerPhishingSimulation = async (emailBody) => {
-  return api.post("/phishing/simulate", { emailBody });
+  return api.post("/phishing/simulate", { emailBody },
+    {
+      headers: { "user-id": getUserId() },
+    });
 };
 
 export const connectToPhishingLogs = () => {
-  return new EventSource("/api/phishing/logs"); // ✅ SSE connection to backend logs
+  return new EventSource(`/api/phishing/logs?user-id=${getUserId()}`);
 };
 
 // ✅ Logout User
